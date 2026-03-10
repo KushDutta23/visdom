@@ -290,12 +290,18 @@ class UpdateHandler(BaseHandler):
             if all(math.isnan(i) or i is None for i in new_data[n]["x"]):
                 continue
             # handle data for plotting
+            MAX_POINTS = 10000
+            
             for axis in ["x", "y"]:
                 pdata[idx][axis] = (
                     (pdata[idx][axis] + new_data[n][axis])
                     if append
                     else new_data[n][axis]
                 )
+
+                # limit stored data points to prevent CPU increase
+                if isinstance(pdata[idx][axis], list) and len(pdata[idx][axis]) > MAX_POINTS:
+                    pdata[idx][axis] = pdata[idx][axis][-MAX_POINTS:]
 
             # handle marker properties
             if "marker" not in new_data[n]:
