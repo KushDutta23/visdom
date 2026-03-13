@@ -1409,16 +1409,26 @@ class Visdom(object):
         assert mimetype is not None, "unknown audio type: %s" % extension
 
         bytestr = loadfile(audiofile)
+
+       import html
+
+       caption = html.escape(opts.get("caption", ""))
+       caption_html = f"<p>{caption}</p>" if caption else ""
+        
         audiodata = """
-            <audio controls>
-                <source type="audio/%s" src="data:audio/%s;base64,%s">
-                Your browser does not support the audio tag.
-            </audio>
+            <div>
+                %s
+                <audio controls>
+                    <source type="audio/%s" src="data:audio/%s;base64,%s">
+                    Your browser does not support the audio tag.
+                </audio>
+            </div>
         """ % (
-            mimetype,
-            mimetype,
-            base64.b64encode(bytestr).decode("utf-8"),
-        )
+        caption_html,
+        mimetype,
+         mimetype,
+        base64.b64encode(bytestr).decode("utf-8"),
+    )
         opts["height"] = 80
         opts["width"] = 330
         return self.text(text=audiodata, win=win, env=env, opts=opts)
