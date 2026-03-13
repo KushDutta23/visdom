@@ -1383,6 +1383,7 @@ class Visdom(object):
         """
         opts = {} if opts is None else opts
         opts["sample_frequency"] = opts.get("sample_frequency", 44100)
+        caption = opts.get("caption", "")
         _title2str(opts)
         _assert_opts(opts)
         assert (
@@ -1410,10 +1411,15 @@ class Visdom(object):
 
         bytestr = loadfile(audiofile)
         audiodata = """
-            <audio controls>
-                <source type="audio/%s" src="data:audio/%s;base64,%s">
-                Your browser does not support the audio tag.
-            </audio>
+            <div>
+                %s
+                <audio controls>
+                    <source type="audio/%s" src="data:audio/%s;base64,%s">
+                    Your browser does not support the audio tag.
+                </audio>
+            </div>
+        """ % (
+    f"<p>{caption}</p>" if caption else "",
         """ % (
             mimetype,
             mimetype,
