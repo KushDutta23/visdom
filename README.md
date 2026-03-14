@@ -194,6 +194,17 @@ Visdom now can be accessed by going to `http://localhost:8097` in your browser, 
 >If the above does not work, try using an SSH tunnel to your server by adding the following line to your local  `~/.ssh/config`:
 ```LocalForward 127.0.0.1:8097 127.0.0.1:8097```.
 
+## Installation and Setup
+
+Follow these steps to install and run Visdom locally.
+
+### 1. Install Visdom
+
+Install Visdom using pip:
+
+```bash
+pip install visdom
+
 #### Command Line Options
 
 The following options can be provided to the server:
