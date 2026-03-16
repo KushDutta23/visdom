@@ -266,14 +266,36 @@ def compare_envs(state, eids, socket, env_path=DEFAULT_ENV_PATH):
         env = envs[eid]
         for wid in env.get("jsons", {}).keys():
             win = env["jsons"][wid]
-            if win.get("type", None) != "plot":
+            if win.get("type") not in ["plot", "text"]:
                 continue
+
             if "content" not in win:
                 continue
             if "title" not in win:
                 continue
+
             title = win["title"]
             if title not in name2Wid or title == "":
+                continue
+
+            destWid = name2Wid[title]
+            destWidJson = res["jsons"][destWid]
+
+            if win.get("type") == "text":
+
+                if destWidJson.get("type") != "text":
+                    continue
+
+                if not isinstance(destWidJson.get("content"), str):
+                    destWidJson["content"] = ""
+
+                if ix == 0:
+                    destWidJson["content"] = f"<b>{eidNums[eid]}</b><br>{win['content']}"
+                    destWidJson["has_compare"] = False
+                else:
+                    destWidJson["has_compare"] = True
+                    destWidJson["content"] += f"<br><br><b>{eidNums[eid]}</b><br>{win['content']}"
+
                 continue
 
             destWid = name2Wid[title]
