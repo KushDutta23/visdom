@@ -1,0 +1,36 @@
+version: 2
+
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    groups:
+      python-deps:
+        patterns:
+          - "*"
+
+  # JavaScript dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    groups:
+      npm-deps:
+        patterns:
+          - "*"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "06:00"
