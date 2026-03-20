@@ -3,6 +3,18 @@ We want to make contributing to this project as easy and transparent as
 possible.
 
 ## Issues
+
+**Issue: ModuleNotFoundError: No module named 'pkg_resources'**
+
+This error may occur during project setup if the required dependency is missing.
+
+The `pkg_resources` module is part of the `setuptools` package.
+
+To resolve this issue, install setuptools:
+
+```bash
+pip install setuptools
+
 Before you post an issue on our tracker, please check the following list of
 issues to see if it resolves your issue. If this document does not resolve your
 problem, please scroll all the way down for details on how to report an issue.
