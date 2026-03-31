@@ -1,36 +1,45 @@
 version: 2
 
 updates:
-  # Python dependencies
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "sunday"
       time: "06:00"
-    open-pull-requests-limit: 5
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 2
     groups:
       python-deps:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
-  # JavaScript dependencies
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "sunday"
       time: "06:00"
+      timezone: "Asia/Kolkata"
     open-pull-requests-limit: 5
     groups:
-      npm-deps:
+      frontend-deps:
         patterns:
-          - "*"
+          - "react*"
+          - "vue*"
+      dev-deps:
+        dependency-type: "development"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
-  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "sunday"
       time: "06:00"
+      timezone: "Asia/Kolkata"
