@@ -246,9 +246,12 @@ def compare_envs(state, eids, socket, env_path=DEFAULT_ENV_PATH):
         elif env_path is not None:
             p = os.path.join(env_path, f"{eid.strip()}.json")
             if os.path.exists(p):
-                with open(p, "r") as fn:
-                    env = tornado.escape.json_decode(fn.read())
-                    state[eid] = env
+               try:
+                    with open(p, "r") as fn:
+                        env = tornado.escape.json_decode(fn.read())
+                       state[eid] = env
+                except (OSError, ValueError) as e:
+                     logging.error(f"Failed to load environment {eid} from {p}: {e}")
                     envs[eid] = env
 
     res = copy.deepcopy(envs[list(envs.keys())[0]])
