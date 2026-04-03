@@ -15,6 +15,7 @@ import getpass
 import logging
 import os
 import sys
+import errno
 from tornado import ioloop
 from visdom.server.app import Application
 from visdom.server.defaults import (
@@ -210,31 +211,56 @@ def main(print_func=None):
                         "line prompt.".format(cookie_var, enable_env_login)
                     )
                     sys.exit(1)
+                else:
+                    env_cookie = None
+                    set_cookie(env_cookie)
+
+                else:
+                    user_credential = None
+
+            port = FLAGS.port
+            max_attempts = 10
+            attempt = 0
+
+            while attempt < max_attempts:
+            try:
+                    port = FLAGS.port
+    max_attempts = 10
+    attempt = 0
+
+    while attempt < max_attempts:
+        try:
+            start_server(
+                port=port,
+                hostname=FLAGS.hostname,
+                base_url=base_url,
+                env_path=FLAGS.env_path,
+                readonly=FLAGS.readonly,
+                print_func=print_func,
+                user_credential=user_credential,
+                use_frontend_client_polling=FLAGS.use_frontend_client_polling,
+                bind_local=FLAGS.bind_local,
+                eager_data_loading=FLAGS.eager_data_loading,
+            )
+            break
+
+        except OSError as e:
+            if getattr(e, "errno", None) == errno.EADDRINUSE:
+                logging.warning(
+                    f"Port {port} is in use. Retrying with port {port + 1}..."
+                )
+                port += 1
+                attempt += 1
+
+                if port > 65535:
+                    raise RuntimeError("No available ports found (exceeded 65535)")
+
+                if attempt == max_attempts:
+                    raise RuntimeError(
+                        f"Could not find a free port after {max_attempts} attempts"
+                    )
             else:
-                env_cookie = None
-            set_cookie(env_cookie)
-
-    else:
-        user_credential = None
-
-    port = FLAGS.port
-max_attempts = 10
-attempt = 0
-
-while attempt < max_attempts:
-    try:
-        start_server(
-            port=port,
-            hostname=FLAGS.hostname,
-            base_url=base_url,
-            env_path=FLAGS.env_path,
-            readonly=FLAGS.readonly,
-            print_func=print_func,
-            user_credential=user_credential,
-            use_frontend_client_polling=FLAGS.use_frontend_client_polling,
-            bind_local=FLAGS.bind_local,
-            eager_data_loading=FLAGS.eager_data_loading,
-        )
+                raise
         break  # success
     except OSError:
         logging.warning(f"Port {port} is in use, trying {port + 1}...")
