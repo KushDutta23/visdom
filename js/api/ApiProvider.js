@@ -36,7 +36,7 @@ const ApiProvider = ({ children }) => {
   // Send a low-level message to the server
   const sendSocketMessage = (data) => {
     if (!_socket.current) {
-      console.error('WebSocket is not connected. Cannot send message:', data);
+      console.error('WebSocket not connected. Cannot send message.');
       return;
     }
       console.error('WebSocket is not connected. Cannot send message:', data);
@@ -56,18 +56,18 @@ const ApiProvider = ({ children }) => {
     const _onConnect = () => {
       setConnected(true);
     };
-    const _onDisconnect = () => {
-      console.warn('Disconnected from server. Attempting to reconnect...');
-      apiHandlers.current.onDisconnect(_socket);
-      setConnected(false);
+   const _onDisconnect = () => {
+     console.warn('Disconnected from server.');
 
-      setTimeout(() => {
-        console.log('Reconnecting...');
-        _socket.current = null;
-        connect();
-      }, 2000);
-    };
+     apiHandlers.current.onDisconnect(_socket);
+     setConnected(false);
 
+     setTimeout(() => {
+       console.log('Reconnecting...');
+       _socket.current = null;
+       connect();
+    }, 2000);
+  };
     // eslint-disable-next-line no-undef
     if (USE_POLLING) {
       _socket.current = new Poller(
@@ -96,7 +96,7 @@ const ApiProvider = ({ children }) => {
       console.error('WebSocket error:', err);
       _onDisconnect();   
     };
-
+    socket.onclose = _onDisconnect;
     socket.onclose = (event) => {
       console.warn('WebSocket closed:', event);
       _onDisconnect();
