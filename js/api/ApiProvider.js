@@ -35,7 +35,10 @@ const ApiProvider = ({ children }) => {
 
   // Send a low-level message to the server
   const sendSocketMessage = (data) => {
-   if (!_socket.current) {
+    if (!_socket.current) {
+      console.error('WebSocket is not connected. Cannot send message:', data);
+      return;
+    }
       console.error('WebSocket is not connected. Cannot send message:', data);
       return;
     }
@@ -57,6 +60,12 @@ const ApiProvider = ({ children }) => {
       console.warn('Disconnected from server. Attempting to reconnect...');
       apiHandlers.current.onDisconnect(_socket);
       setConnected(false);
+
+      setTimeout(() => {
+        console.log('Reconnecting...');
+        _socket.current = null;
+        connect();
+      }, 2000);
     };
 
     // eslint-disable-next-line no-undef
@@ -85,6 +94,7 @@ const ApiProvider = ({ children }) => {
     socket.onopen = _onConnect;
     socket.onerror = (err) => {
       console.error('WebSocket error:', err);
+      _onDisconnect();   
     };
 
     socket.onclose = (event) => {
