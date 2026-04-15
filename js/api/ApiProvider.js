@@ -36,9 +36,13 @@ const ApiProvider = ({ children }) => {
   // Send a low-level message to the server
   const sendSocketMessage = (data) => {
     if (!_socket.current) {
-      console.error('WebSocket is not connected. Cannot send message:', data);
+      console.error('WebSocket not connected. Cannot send message:', data);
       return;
     }
+  
+    let msg = JSON.stringify(data);
+    return _socket.current.send(msg);
+  };
 
     let msg = JSON.stringify(data);
     return _socket.current.send(msg);
