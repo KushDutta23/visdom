@@ -36,9 +36,6 @@ const ApiProvider = ({ children }) => {
   // Send a low-level message to the server
   const sendSocketMessage = (data) => {
     if (!_socket.current) {
-      console.error('WebSocket not connected. Cannot send message.');
-      return;
-    }
       console.error('WebSocket is not connected. Cannot send message:', data);
       return;
     }
@@ -92,17 +89,16 @@ const ApiProvider = ({ children }) => {
 
     socket.onmessage = handleMessage;
     socket.onopen = _onConnect;
+
     socket.onerror = (err) => {
       console.error('WebSocket error:', err);
-      _onDisconnect();   
+      _onDisconnect();
     };
-    socket.onclose = _onDisconnect;
+
     socket.onclose = (event) => {
       console.warn('WebSocket closed:', event);
       _onDisconnect();
     };
-    _socket.current = socket;
-  };
 
   // Close the server connection and reset the _socket ref
   const disconnect = () => {
