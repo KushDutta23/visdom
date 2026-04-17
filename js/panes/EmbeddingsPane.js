@@ -123,7 +123,13 @@ class EmbeddingsPane extends React.Component {
           </div>
         ) : (
           <Scene
-            key={this.props.content.data.length}
+            key={
+              this.props.height +
+              '===' +
+              this.props.width +
+              '===' +
+              this.props.content.data.length
+            }
             content={this.props.content}
             height={this.props.height}
             width={this.props.width}
@@ -192,17 +198,25 @@ class Scene extends React.Component {
     let hoverContainer = new THREE.Object3D();
     scene.add(hoverContainer);
 
-    view.on(
-      'mousemove',
-      debounce(() => {
-        if (!this.props.interactive) return;
-        let [mouseX, mouseY] = mouse(view.node());
-        this.checkIntersects([mouseX, mouseY], points, hoverContainer, circle_sprite);
-        
-        this.renderOnce(); // optional
-      }, 50)
-    );
-    });
+    this.handleMouseMove = debounce((mouse_position) => {
+  if (!this.props.interactive) return;
+
+  this.checkIntersects(
+    mouse_position,
+    points,
+    hoverContainer,
+    circle_sprite
+  );
+
+  this.renderOnce();
+}, 50);
+
+view.on('mousemove', () => {
+  if (!this.props.interactive) return;
+
+  let [mouseX, mouseY] = mouse(view.node());
+  this.handleMouseMove([mouseX, mouseY]);
+});
 
     view.on('mouseleave', () => {
       this.removeHighlights(hoverContainer);
@@ -217,9 +231,12 @@ class Scene extends React.Component {
       .scaleExtent([this.getScaleFromZ(far), this.getScaleFromZ(near) - 1]);
     zoom.on('zoom', () => {
       if (!this.props.interactive) return;
+    
       let d3_transform = currentEvent.transform;
       this.lastTransform = currentEvent.transform;
       this.zoomHandler(d3_transform);
+    
+      this.renderOnce(); // ✅ ADD THIS
     });
     this.zoom = zoom;
 
@@ -337,15 +354,26 @@ class Scene extends React.Component {
     this.setUpMouseInteractions();
 
     this.mount.appendChild(this.renderer.domElement);
-    this.start();
   }
 
   componentWillUnmount() {
     this.stop();
+  
+    if (this.handleMouseMove?.cancel) {
+      this.handleMouseMove.cancel(); // ✅ important
+    }
+  
     let view = select(this.renderer.domElement);
     view.on('mousemove', null);
     view.on('mouseleave', null);
-    this.mount.removeChild(this.renderer.domElement);
+  
+    if (this.mount && this.renderer?.domElement) {
+      this.mount.removeChild(this.renderer.domElement);
+    }
+  
+    this.renderer = null;
+    this.scene = null;
+    this.camera = null;
   }
 
   /* utility methods */
@@ -419,7 +447,9 @@ class Scene extends React.Component {
   }
 
   hideTooltip() {
-    this.setState({ hovered: null });
+    if (this.state.hovered !== null) {
+      this.setState({ hovered: null });
+    }
   }
 
   sortIntersectsByDistanceToRay(intersects) {
@@ -455,18 +485,7 @@ class Scene extends React.Component {
     this.renderer.render(this.scene, this.camera);
   };
 
-  stop() {
-    cancelAnimationFrame(this.frameId);
-  }
-
-  animate() {
-    this.renderScene();
-    this.frameId = window.requestAnimationFrame(this.animate);
-  }
-
-  renderScene() {
-    this.renderer.render(this.scene, this.camera);
-  }
+  stop() {}
 
   render() {
     const selectedStyles = {
