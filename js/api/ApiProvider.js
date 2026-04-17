@@ -40,12 +40,8 @@ const ApiProvider = ({ children }) => {
       return;
     }
   
-    let msg = JSON.stringify(data);
-    return _socket.current.send(msg);
-  };
-
-    let msg = JSON.stringify(data);
-    return _socket.current.send(msg);
+    const msg = JSON.stringify(data);
+    _socket.current.send(msg);
   };
 
   // Establish a connection to the server
@@ -53,7 +49,8 @@ const ApiProvider = ({ children }) => {
     if (_socket.current) {
       return;
     }
-
+    _socket.current = socket;
+    };
     const _onConnect = () => {
       setConnected(true);
     };
@@ -103,13 +100,13 @@ const ApiProvider = ({ children }) => {
       console.warn('WebSocket closed:', event);
       _onDisconnect();
     };
-
   // Close the server connection and reset the _socket ref
   const disconnect = () => {
-    _socket.current.close();
-    _socket.current = null;
+    if (_socket.current) {
+      _socket.current.close();
+      _socket.current = null;
+    }
   };
-
   // ------------------ //
   // API receive events //
   // -------------------//
@@ -132,7 +129,7 @@ const ApiProvider = ({ children }) => {
       case 'window_update':
         apiHandlers.current.onWindowMessage({
           cmd: cmd,
-          update: cmd.commmand == 'window_update',
+          update: cmd.command == 'window_update',
         });
         break;
       case 'reload':
@@ -145,7 +142,7 @@ const ApiProvider = ({ children }) => {
       case 'layout_update':
         apiHandlers.current.onLayoutMessage({
           data: cmd.data,
-          update: cmd.commmand == 'layout_update',
+          update: cmd.command == 'layout_update',
         });
         break;
       case 'env_update':
@@ -158,7 +155,6 @@ const ApiProvider = ({ children }) => {
   };
 
   // we need to update the socket-callback so that we have an up-to date state
-  if (_socket.current) _socket.current.onmessage = handleMessage;
 
   // --------------- //
   // API send events //
