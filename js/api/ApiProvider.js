@@ -49,23 +49,27 @@ const ApiProvider = ({ children }) => {
     if (_socket.current) {
       return;
     }
-    _socket.current = socket;
-    };
+  
     const _onConnect = () => {
       setConnected(true);
     };
-   const _onDisconnect = () => {
-     console.warn('Disconnected from server.');
-
-     apiHandlers.current.onDisconnect(_socket);
-     setConnected(false);
-
-     setTimeout(() => {
-       console.log('Reconnecting...');
-       _socket.current = null;
-       connect();
-    }, 2000);
-  };
+  
+    const _onDisconnect = () => {
+      console.warn('Disconnected from server.');
+  
+      if (apiHandlers.current) {
+        apiHandlers.current.onDisconnect(_socket);
+      }
+  
+      setConnected(false);
+  
+      setTimeout(() => {
+        console.log('Reconnecting...');
+        _socket.current = null;
+        connect();
+      }, 2000);
+    };
+  
     // eslint-disable-next-line no-undef
     if (USE_POLLING) {
       _socket.current = new Poller(
@@ -76,30 +80,29 @@ const ApiProvider = ({ children }) => {
       );
       return;
     }
-
-    var url = window.location;
-    var ws_protocol = null;
-    if (url.protocol == 'https:') {
-      ws_protocol = 'wss';
-    } else {
-      ws_protocol = 'ws';
-    }
-    var socket = new WebSocket(
+  
+    const url = window.location;
+    const ws_protocol = url.protocol === 'https:' ? 'wss' : 'ws';
+  
+    const socket = new WebSocket(
       ws_protocol + '://' + url.host + correctPathname() + 'socket'
     );
-
+  
     socket.onmessage = handleMessage;
     socket.onopen = _onConnect;
-
+  
     socket.onerror = (err) => {
       console.error('WebSocket error:', err);
       _onDisconnect();
     };
-
+  
     socket.onclose = (event) => {
       console.warn('WebSocket closed:', event);
       _onDisconnect();
     };
+  
+    _socket.current = socket; // ✅ IMPORTANT
+  };
   // Close the server connection and reset the _socket ref
   const disconnect = () => {
     if (_socket.current) {
@@ -127,33 +130,42 @@ const ApiProvider = ({ children }) => {
       case 'pane':
       case 'window':
       case 'window_update':
-        apiHandlers.current.onWindowMessage({
-          cmd: cmd,
-          update: cmd.command == 'window_update',
-        });
-        break;
+        if (apiHandlers.current) {
+          apiHandlers.current.onWindowMessage({
+            cmd: cmd,
+            update: cmd.command == 'window_update',
+          });
+          break;
+        }
       case 'reload':
-        apiHandlers.current.onReloadMessage(cmd.data);
-        break;
+        if (apiHandlers.current) {
+          apiHandlers.current.onReloadMessage(cmd.data);
+          break;
+        }
       case 'close':
-        apiHandlers.current.onCloseMessage(cmd.data);
-        break;
+        if (apiHandlers.current) {
+          apiHandlers.current.onCloseMessage(cmd.data);
+          break;
+         }
       case 'layout':
       case 'layout_update':
-        apiHandlers.current.onLayoutMessage({
-          data: cmd.data,
-          update: cmd.command == 'layout_update',
-        });
-        break;
+        if (apiHandlers.current) {
+          apiHandlers.current.onLayoutMessage({
+            data: cmd.data,
+            update: cmd.command == 'layout_update',
+          });
+          break;
+         }
       case 'env_update':
-        apiHandlers.current.onEnvUpdate(cmd.data);
-        break;
-
-      default:
-        console.error('unrecognized command', cmd);
-    }
-  };
-
+        if (apiHandlers.current) {
+          apiHandlers.current.onEnvUpdate(cmd.data);
+          break;
+        }
+        default:
+          console.error('unrecognized command', cmd);
+      }
+    };
+  
   // we need to update the socket-callback so that we have an up-to date state
 
   // --------------- //
