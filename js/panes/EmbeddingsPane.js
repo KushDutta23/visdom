@@ -123,13 +123,7 @@ class EmbeddingsPane extends React.Component {
           </div>
         ) : (
           <Scene
-            key={
-              this.props.height +
-              '===' +
-              this.props.width +
-              '===' +
-              this.props.content.data.length
-            }
+            key={this.props.content.data.length}
             content={this.props.content}
             height={this.props.height}
             width={this.props.width}
@@ -198,16 +192,16 @@ class Scene extends React.Component {
     let hoverContainer = new THREE.Object3D();
     scene.add(hoverContainer);
 
-    view.on('mousemove', () => {
-      if (!this.props.interactive) return;
-      let [mouseX, mouseY] = mouse(view.node());
-      let mouse_position = [mouseX, mouseY];
-      this.checkIntersects(
-        mouse_position,
-        points,
-        hoverContainer,
-        circle_sprite
-      );
+    view.on(
+      'mousemove',
+      debounce(() => {
+        if (!this.props.interactive) return;
+        let [mouseX, mouseY] = mouse(view.node());
+        this.checkIntersects([mouseX, mouseY], points, hoverContainer, circle_sprite);
+        
+        this.renderOnce(); // optional
+      }, 50)
+    );
     });
 
     view.on('mouseleave', () => {
@@ -419,7 +413,9 @@ class Scene extends React.Component {
         this.props.onSelect(datum);
       });
     }
-    this.setState({ hovered: datum });
+    if (this.state.hovered !== datum) {
+      this.setState({ hovered: datum });
+    }
   }
 
   hideTooltip() {
@@ -455,11 +451,9 @@ class Scene extends React.Component {
     hoverContainer.remove(...hoverContainer.children);
   }
 
-  start() {
-    if (!this.frameId) {
-      this.frameId = requestAnimationFrame(this.animate);
-    }
-  }
+  renderOnce = () => {
+    this.renderer.render(this.scene, this.camera);
+  };
 
   stop() {
     cancelAnimationFrame(this.frameId);
