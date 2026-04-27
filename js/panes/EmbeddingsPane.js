@@ -198,7 +198,9 @@ class Scene extends React.Component {
     let hoverContainer = new THREE.Object3D();
     scene.add(hoverContainer);
 
-    view.on('mousemove', () => {
+    view.on(
+      'mousemove',
+      debounce(() => {
       if (!this.props.interactive) return;
       let [mouseX, mouseY] = mouse(view.node());
       let mouse_position = [mouseX, mouseY];
@@ -362,6 +364,7 @@ class Scene extends React.Component {
     let z = this.getZFromScale(scale);
     this.raycaster.params.Points.threshold = 30 / (scale * 0.5);
     this.camera.position.set(x, y, z);
+    this.needsRender = true;
   };
 
   getScaleFromZ(camera_z_position) {
@@ -456,6 +459,7 @@ class Scene extends React.Component {
   }
 
   start() {
+    this.needsRender = true;
     if (!this.frameId) {
       this.frameId = requestAnimationFrame(this.animate);
     }
@@ -463,10 +467,14 @@ class Scene extends React.Component {
 
   stop() {
     cancelAnimationFrame(this.frameId);
+    this.frameId = null;
   }
 
   animate() {
-    this.renderScene();
+    if (this.needsRender) {
+      this.renderScene();
+      this.needsRender = false;
+    }
     this.frameId = window.requestAnimationFrame(this.animate);
   }
 
