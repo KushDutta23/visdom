@@ -154,8 +154,7 @@ class Scene extends React.Component {
     this.stop = this.stop.bind(this);
     this.animate = this.animate.bind(this);
   }
-
-  requestRenderIfNotRequested() {
+   requestRenderIfNotRequested() {
     if (!this.frameId) {
       this.needsRender = true;
       this.frameId = requestAnimationFrame(this.animate);
@@ -208,17 +207,21 @@ class Scene extends React.Component {
     view.on(
       'mousemove',
       debounce(() => {
-      }, 50, { leading: true })
-      if (!this.props.interactive) return;
-      let [mouseX, mouseY] = mouse(view.node());
-      let mouse_position = [mouseX, mouseY];
-      this.checkIntersects(
-        mouse_position,
-        points,
-        hoverContainer,
-        circle_sprite
-      );
-    });
+        if (!this.props.interactive) return;
+    
+        let [mouseX, mouseY] = mouse(view.node());
+        let mouse_position = [mouseX, mouseY];
+    
+        this.checkIntersects(
+          mouse_position,
+          points,
+          hoverContainer,
+          circle_sprite
+        );
+    
+        this.requestRenderIfNotRequested();
+      }, 50)
+    );
 
     view.on('mouseleave', () => {
       this.removeHighlights(hoverContainer);
@@ -372,7 +375,7 @@ class Scene extends React.Component {
     let z = this.getZFromScale(scale);
     this.raycaster.params.Points.threshold = 30 / (scale * 0.5);
     this.camera.position.set(x, y, z);
-    this.requestRender();
+    this.requestRenderIfNotRequested();
   };
 
   getScaleFromZ(camera_z_position) {
@@ -467,7 +470,7 @@ class Scene extends React.Component {
   }
 
   start() {
-    this.requestRender();
+    this.requestRenderIfNotRequested();
   }
 
   stop() {
