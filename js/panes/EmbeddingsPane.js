@@ -154,6 +154,12 @@ class Scene extends React.Component {
     this.stop = this.stop.bind(this);
     this.animate = this.animate.bind(this);
   }
+   requestRenderIfNotRequested() {
+    if (!this.frameId) {
+      this.needsRender = true;
+      this.frameId = requestAnimationFrame(this.animate);
+    }
+  }
 
   componentDidUpdate(prevProps) {
     if (this.state.detailsLoading !== false) {
@@ -201,16 +207,21 @@ class Scene extends React.Component {
     view.on(
       'mousemove',
       debounce(() => {
-      if (!this.props.interactive) return;
-      let [mouseX, mouseY] = mouse(view.node());
-      let mouse_position = [mouseX, mouseY];
-      this.checkIntersects(
-        mouse_position,
-        points,
-        hoverContainer,
-        circle_sprite
-      );
-    });
+        if (!this.props.interactive) return;
+    
+        let [mouseX, mouseY] = mouse(view.node());
+        let mouse_position = [mouseX, mouseY];
+    
+        this.checkIntersects(
+          mouse_position,
+          points,
+          hoverContainer,
+          circle_sprite
+        );
+    
+        this.requestRenderIfNotRequested();
+      }, 50)
+    );
 
     view.on('mouseleave', () => {
       this.removeHighlights(hoverContainer);
@@ -364,7 +375,7 @@ class Scene extends React.Component {
     let z = this.getZFromScale(scale);
     this.raycaster.params.Points.threshold = 30 / (scale * 0.5);
     this.camera.position.set(x, y, z);
-    this.needsRender = true;
+    this.requestRenderIfNotRequested();
   };
 
   getScaleFromZ(camera_z_position) {
@@ -459,10 +470,7 @@ class Scene extends React.Component {
   }
 
   start() {
-    this.needsRender = true;
-    if (!this.frameId) {
-      this.frameId = requestAnimationFrame(this.animate);
-    }
+    this.requestRenderIfNotRequested();
   }
 
   stop() {
@@ -471,11 +479,14 @@ class Scene extends React.Component {
   }
 
   animate() {
-    if (this.needsRender) {
-      this.renderScene();
-      this.needsRender = false;
+    if (!this.needsRender) {
+      this.frameId = null;
+      return;
     }
-    this.frameId = window.requestAnimationFrame(this.animate);
+  
+    this.renderScene();
+    this.needsRender = false;
+    this.frameId = null;
   }
 
   renderScene() {
